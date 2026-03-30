@@ -519,6 +519,9 @@ def init_db():
             db.session.commit()
 
 if __name__ == '__main__':
-    if not os.path.exists('database.db'):
+    if 'database.db' in os.listdir('./instance'):
+        os.remove('./instance/database.db') 
         init_db()
+        print('SQLite database already exists. Skipping initialization.')
+
     app.run(debug=True)
