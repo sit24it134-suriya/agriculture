@@ -72,11 +72,14 @@ Then open your browser at `http://127.0.0.1:5000`.
 
 ## Environment
 
-Optional environment variable:
+Optional environment variables:
 
 - `FLASK_SECRET_KEY` - secret key used by Flask sessions.
+- `LOG_LEVEL` - logging level for application output (default: `INFO`).
 
-If not set, the app uses a default key: `farmersmarketsecret`.
+If `FLASK_SECRET_KEY` is not set, the app uses the default key: `farmersmarketsecret`.
+
+Logs are written to `logs/app.log` in the project root.
 
 ## Default Sample Accounts
 

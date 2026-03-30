@@ -3,12 +3,26 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 import os
+import logging
+from logging.handlers import RotatingFileHandler
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'farmersmarketsecret')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
+
+# Configure application logging
+log_level = os.environ.get('LOG_LEVEL', 'INFO').upper()
+log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs')
+os.makedirs(log_dir, exist_ok=True)
+file_handler = RotatingFileHandler(os.path.join(log_dir, 'app.log'), maxBytes=1024 * 1024, backupCount=5, encoding='utf-8')
+file_handler.setLevel(getattr(logging, log_level, logging.INFO))
+file_formatter = logging.Formatter('%(asctime)s %(levelname)s %(name)s %(message)s')
+file_handler.setFormatter(file_formatter)
+app.logger.setLevel(getattr(logging, log_level, logging.INFO))
+app.logger.addHandler(file_handler)
+app.logger.info('Starting Farmers Market app with log level %s', log_level)
 
 db = SQLAlchemy(app)
 
@@ -57,6 +71,12 @@ class OrderItem(db.Model):
 @app.before_request
 def make_session_permanent():
     session.permanent = True
+
+@app.before_request
+def log_request_info():
+    current_user = get_current_user()
+    app.logger.info('Request %s %s from %s user=%s', request.method, request.path, request.remote_addr, current_user.email if current_user else 'anonymous')
+
 
 def get_current_user():
     if 'user_id' in session:
@@ -136,6 +156,7 @@ def checkout():
 
         Cart.query.filter_by(user_id=user.id).delete()
         db.session.commit()
+        app.logger.info('Order placed: order_id=%s user=%s total=%.2f items=%s', order.id, user.email, total, len(cart_items))
 
         flash('Order placed successfully! Thank you for your purchase.', 'success')
         return redirect(url_for('order_confirmation', order_id=order.id))
@@ -201,6 +222,7 @@ def approve_farmer():
     if farmer and farmer.role == 'farmer':
         farmer.approved = True
         db.session.commit()
+        app.logger.info('Farmer approved: user_id=%s email=%s by admin=%s', farmer.id, farmer.email, user.email)
         flash('Farmer approved successfully.', 'success')
     return redirect(url_for('admin_dashboard'))
 
@@ -214,6 +236,7 @@ def approve_product():
     if product:
         product.approved = True
         db.session.commit()
+        app.logger.info('Product approved: product_id=%s name=%s by admin=%s', product.id, product.name, user.email)
         flash('Product approved successfully.', 'success')
     return redirect(url_for('admin_dashboard'))
 
@@ -228,6 +251,7 @@ def update_order_status():
     if order:
         order.status = status
         db.session.commit()
+        app.logger.info('Order status updated: order_id=%s status=%s by admin=%s', order.id, status, user.email)
         flash('Order status updated.', 'success')
     return redirect(url_for('admin_dashboard'))
 
@@ -250,12 +274,14 @@ def add_product():
         image_url = request.form.get('image_url', '').strip()
 
         if not name or not description or not price or not category or not image_url:
+            app.logger.warning('Add product submission missing fields by user=%s', user.email)
             flash('Please complete all product fields.', 'danger')
             return redirect(url_for('add_product'))
 
         try:
             price_value = float(price)
         except ValueError:
+            app.logger.warning('Add product submission invalid price by user=%s price=%s', user.email, price)
             flash('Please enter a valid numeric price.', 'danger')
             return redirect(url_for('add_product'))
 
@@ -270,6 +296,7 @@ def add_product():
         )
         db.session.add(product)
         db.session.commit()
+        app.logger.info('Product submitted for approval: product=%s farmer=%s', product.name, user.email)
         flash('Product submitted for approval. Master will review and approve it shortly.', 'success')
         return redirect(url_for('products_page'))
 
@@ -282,11 +309,13 @@ def login():
         password = request.form.get('password', '')
         user = User.query.filter_by(email=email).first()
         if not user or not check_password_hash(user.password, password):
+            app.logger.warning('Failed login attempt for email=%s from %s', email, request.remote_addr)
             flash('Invalid email or password.', 'danger')
             return redirect(url_for('login'))
         session['user_id'] = user.id
         session['user_name'] = user.name
         session['user_role'] = user.role
+        app.logger.info('User logged in: %s role=%s', email, user.role)
         flash(f'Welcome back, {user.name}!', 'success')
         return redirect(url_for('home'))
     return render_template('login.html', user=get_current_user())
@@ -299,9 +328,11 @@ def signup():
     role = request.form.get('role', 'customer')
 
     if not name or not email or not password:
+        app.logger.warning('Signup attempt with incomplete fields from %s', request.remote_addr)
         flash('Please complete all fields.', 'danger')
         return redirect(url_for('login'))
     if User.query.filter_by(email=email).first():
+        app.logger.warning('Signup attempt with existing email: %s', email)
         flash('Email already exists. Please log in.', 'warning')
         return redirect(url_for('login'))
 
@@ -316,6 +347,7 @@ def signup():
     session['user_id'] = user.id
     session['user_name'] = user.name
     session['user_role'] = user.role
+    app.logger.info('New user registered: %s role=%s', email, role)
     if role == 'farmer':
         flash('Farmer registration submitted. Awaiting master approval.', 'info')
     else:
@@ -324,6 +356,11 @@ def signup():
 
 @app.route('/logout')
 def logout():
+    current_user = get_current_user()
+    if current_user:
+        app.logger.info('User logged out: %s', current_user.email)
+    else:
+        app.logger.info('Logout called without active session')
     session.clear()
     flash('You have been logged out.', 'info')
     return redirect(url_for('home'))
@@ -332,12 +369,14 @@ def logout():
 def add_to_cart():
     user = get_current_user()
     if not user:
+        app.logger.warning('Unauthorized add-to-cart attempt from %s', request.remote_addr)
         return jsonify({'success': False, 'message': 'Please login to add items to cart.'}), 401
 
     product_id = request.json.get('product_id') if request.is_json else request.form.get('product_id')
     quantity = int(request.json.get('quantity', 1) if request.is_json else request.form.get('quantity', 1))
     product = Product.query.get(product_id)
     if not product:
+        app.logger.warning('Invalid add-to-cart product_id=%s by user=%s', product_id, user.email)
         return jsonify({'success': False, 'message': 'Product not found.'}), 404
 
     cart_item = Cart.query.filter_by(user_id=user.id, product_id=product.id).first()
@@ -347,6 +386,7 @@ def add_to_cart():
         cart_item = Cart(user_id=user.id, product_id=product.id, quantity=quantity)
         db.session.add(cart_item)
     db.session.commit()
+    app.logger.info('Added to cart: user=%s product=%s quantity=%s', user.email, product.name, quantity)
     return jsonify({'success': True, 'message': f'Added {product.name} to cart.'})
 
 @app.route('/api/products')
@@ -456,7 +496,7 @@ def init_db():
             db.session.commit()
             sample_products = [
                 Product(name='Organic Tomatoes', description='Freshly harvested red tomatoes grown with minimal pesticides.', price=3.49, category='Vegetables', image_url='https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?auto=format&fit=crop&w=800&q=80', farmer_id=farmer.id),
-                Product(name='Mango Honey', description='Naturally sweet honey from our orchard-friendly bees.', price=10.99, category='Honey', image_url='https://images.unsplash.com/photo-1505577058444-a3dabf8eebaf?auto=format&fit=crop&w=800&q=80', farmer_id=farmer.id),
+                Product(name='Mango Honey', description='Naturally sweet honey from our orchard-friendly bees.', price=10.99, category='Honey', image_url='https://img.freepik.com/free-psd/delicious-mango-studio_23-2151843107.jpg?semt=ais_incoming&w=740&q=80', farmer_id=farmer.id),
                 Product(name='Millet Flour', description='Stone-ground millet flour perfect for healthy baking.', price=6.25, category='Grains', image_url='https://images.unsplash.com/photo-1528825871115-3581a5387919?auto=format&fit=crop&w=800&q=80', farmer_id=farmer.id),
                 Product(name='Leafy Spinach', description='Tender spinach leaves packed with vitamins and flavor.', price=2.79, category='Vegetables', image_url='https://images.unsplash.com/photo-1518972559570-5c2a5993e241?auto=format&fit=crop&w=800&q=80', farmer_id=farmer.id),
                 Product(name='Fresh Corn', description='Sweet corn harvested today, great for grilling or salads.', price=4.50, category='Vegetables', image_url='https://images.unsplash.com/photo-1506806732259-39c2d0268443?auto=format&fit=crop&w=800&q=80', farmer_id=farmer.id),
