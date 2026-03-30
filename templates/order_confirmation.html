@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Order Confirmation | AgriMarket{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-5 text-center">
+                <h1 class="h3 mb-3">Order Confirmed</h1>
+                <p class="text-success mb-4">Thank you for your purchase! Your order is now being processed.</p>
+                <div class="mb-4 text-start">
+                    <p><strong>Order ID:</strong> {{ order.id }}</p>
+                    <p><strong>Status:</strong> {{ order.status }}</p>
+                    <p><strong>Placed on:</strong> {{ order.created_at.strftime('%b %d, %Y %I:%M %p') }}</p>
+                    <p><strong>Total:</strong> ${{ '%.2f'|format(order.total) }}</p>
+                </div>
+                <div class="list-group mb-4 text-start">
+                    {% for item in order.items %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fw-semibold">{{ item.product.name }}</div>
+                            <small class="text-muted">Qty: {{ item.quantity }}</small>
+                        </div>
+                        <span class="text-success">${{ '%.2f'|format(item.price * item.quantity) }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                <a href="{{ url_for('products_page') }}" class="btn btn-success btn-lg">Continue Shopping</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

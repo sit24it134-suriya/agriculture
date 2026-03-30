@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Cart | AgriMarket{% endblock %}
+{% block content %}
+<div class="mb-4">
+    <h1 class="h3">Your Cart</h1>
+    <p class="text-muted">Review items, update quantities, or remove products.</p>
+</div>
+
+<div id="cartContent">
+    <div class="spinner-border text-success" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+</div>
+{% endblock %}

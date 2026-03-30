@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}Checkout | AgriMarket{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-5">
+                <h1 class="h3 mb-4">Checkout</h1>
+                <p class="text-muted">Review your order and enter shipping details before placing the order.</p>
+                <div class="mb-4">
+                    <h5 class="mb-3">Order Summary</h5>
+                    <ul class="list-group mb-3">
+                        {% for item in items %}
+                        <li class="list-group-item d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="fw-semibold">{{ item.name }}</div>
+                                <small class="text-muted">Qty: {{ item.quantity }}</small>
+                            </div>
+                            <span class="text-success">${{ '%.2f'|format(item.subtotal) }}</span>
+                        </li>
+                        {% endfor %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center bg-light">
+                            <strong>Total</strong>
+                            <strong class="text-success">${{ '%.2f'|format(total) }}</strong>
+                        </li>
+                    </ul>
+                </div>
+                <form method="post" action="{{ url_for('checkout') }}" class="needs-validation" novalidate>
+                    <div class="mb-3">
+                        <label for="shippingAddress" class="form-label">Shipping Address</label>
+                        <textarea class="form-control" id="shippingAddress" name="shipping_address" rows="3" required></textarea>
+                        <div class="invalid-feedback">Please enter a shipping address.</div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="paymentMethod" class="form-label">Payment Method</label>
+                        <select class="form-select" id="paymentMethod" name="payment_method">
+                            <option value="Credit Card">Credit Card</option>
+                            <option value="UPI">UPI</option>
+                            <option value="Cash on Delivery">Cash on Delivery</option>
+                        </select>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success btn-lg">Place Order</button>
+                        <a href="{{ url_for('cart_page') }}" class="btn btn-outline-secondary btn-lg">Back to Cart</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

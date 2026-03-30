@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %}Home | AgriMarket{% endblock %}
+{% block content %}
+<div class="hero-section rounded-4 overflow-hidden mb-5">
+    <div class="hero-overlay"></div>
+    <div class="container hero-content py-6">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <span class="badge hero-badge rounded-pill mb-3">Farm to Table Marketplace</span>
+                <h1 class="display-4 fw-bold mb-3">Farm Fresh Products Delivered Directly</h1>
+                <p class="lead mb-4 text-white-75">Shop organic produce, handcrafted honey, and sustainable goods from local farmers in a trusted marketplace built for our community.</p>
+                <div class="d-flex flex-wrap gap-3">
+                    <a href="{{ url_for('products_page') }}" class="btn btn-success btn-lg">Browse Products</a>
+                    <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-lg">Join Now</a>
+                </div>
+            </div>
+            <div class="col-lg-5 offset-lg-1">
+                <div class="hero-box p-4 rounded-4 bg-white bg-opacity-10 border border-white border-opacity-25">
+                    <h5 class="text-white mb-3">Local farmers. Fresh harvests. Simple ordering.</h5>
+                    <p class="text-white-75 mb-0">Discover seasonal favorites and track fresh products in exactly the way modern shoppers expect.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="featured-products-section mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="h3 mb-1">Featured Products</h2>
+            <p class="text-muted mb-0">Handpicked goods from the best farms.</p>
+        </div>
+        <a href="{{ url_for('products_page') }}" class="text-success fw-semibold">View All Products</a>
+    </div>
+
+    <div class="row g-4">
+        {% for product in products %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card featured-card h-100 border-0 shadow-sm">
+                <img src="{{ product.image_url }}" class="card-img-top" alt="{{ product.name }}">
+                <div class="card-body d-flex flex-column">
+                    <span class="badge bg-success bg-opacity-15 text-success mb-2">{{ product.category }}</span>
+                    <h5 class="card-title mb-2">{{ product.name }}</h5>
+                    <p class="card-text text-muted small mb-4">{{ product.description[:120] }}{% if product.description|length > 120 %}...{% endif %}</p>
+                    <div class="mt-auto d-flex justify-content-between align-items-center">
+                        <span class="h5 text-success mb-0">${{ '%.2f'|format(product.price) }}</span>
+                        <a href="{{ url_for('product_details', product_id=product.id) }}" class="btn btn-sm btn-outline-success">View</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="py-5 bg-white rounded-4 shadow-sm">
+    <div class="row align-items-center g-4">
+        <div class="col-lg-7">
+            <h2 class="h3">Why Shop Local Farms?</h2>
+            <p class="text-muted">Support local farmers, buy fresher produce, and enjoy a more sustainable grocery experience. Our marketplace connects you directly to growers with transparent pricing and fast delivery.</p>
+            <div class="row g-3 mt-3">
+                <div class="col-sm-6">
+                    <div class="feature-card p-3 rounded-4 border border-success border-opacity-10">
+                        <h6 class="fw-semibold">Quality Produce</h6>
+                        <p class="small text-muted mb-0">Fresh harvests straight from the farm.</p>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="feature-card p-3 rounded-4 border border-success border-opacity-10">
+                        <h6 class="fw-semibold">Trusted Farmers</h6>
+                        <p class="small text-muted mb-0">Farmers verified for fair pricing.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="rounded-4 overflow-hidden shadow-sm bg-light">
+                <img src="https://images.unsplash.com/photo-1517976487492-5750f3195933?auto=format&fit=crop&w=1200&q=80" class="img-fluid" alt="Farm produce" />
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

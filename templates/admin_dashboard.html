@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard | AgriMarket{% endblock %}
+{% block content %}
+<div class="mb-4">
+    <h1 class="h3">Master Dashboard</h1>
+    <p class="text-muted">Approve registrations, review product submissions, and update order status.</p>
+</div>
+
+<section class="mb-5">
+    <h2 class="h5 mb-3">Pending Farmer Approvals</h2>
+    {% if not pending_farmers %}
+        <div class="alert alert-secondary">No farmers waiting for approval.</div>
+    {% else %}
+        <div class="list-group mb-4">
+            {% for farmer in pending_farmers %}
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="fw-semibold">{{ farmer.name }}</div>
+                        <div class="small text-muted">{{ farmer.email }}</div>
+                    </div>
+                    <form method="post" action="{{ url_for('approve_farmer') }}">
+                        <input type="hidden" name="farmer_id" value="{{ farmer.id }}">
+                        <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                    </form>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</section>
+
+<section class="mb-5">
+    <h2 class="h5 mb-3">Pending Product Approvals</h2>
+    {% if not pending_products %}
+        <div class="alert alert-secondary">No products waiting for approval.</div>
+    {% else %}
+        <div class="list-group mb-4">
+            {% for product in pending_products %}
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-start gap-3">
+                        <div>
+                            <div class="fw-semibold">{{ product.name }}</div>
+                            <div class="small text-muted">Category: {{ product.category }} • Farmer ID: {{ product.farmer_id }}</div>
+                            <div class="mt-2">{{ product.description[:110] }}{% if product.description|length > 110 %}...{% endif %}</div>
+                        </div>
+                        <form method="post" action="{{ url_for('approve_product') }}" class="d-flex align-items-start">
+                            <input type="hidden" name="product_id" value="{{ product.id }}">
+                            <button type="submit" class="btn btn-success btn-sm">Approve Product</button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</section>
+
+<section>
+    <h2 class="h5 mb-3">Order Management</h2>
+    {% if not orders %}
+        <div class="alert alert-secondary">No orders yet.</div>
+    {% else %}
+        <div class="list-group">
+            {% for order in orders %}
+                <div class="list-group-item py-4">
+                    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                        <div>
+                            <h6 class="mb-1">Order #{{ order.id }}</h6>
+                            <div class="small text-muted">Customer ID: {{ order.user_id }} • Placed on {{ order.created_at.strftime('%b %d, %Y %I:%M %p') }}</div>
+                        </div>
+                        <span class="badge bg-info bg-opacity-15 text-info">{{ order.status }}</span>
+                    </div>
+                    <form method="post" action="{{ url_for('update_order_status') }}" class="row g-2 align-items-center">
+                        <input type="hidden" name="order_id" value="{{ order.id }}">
+                        <div class="col-sm-5">
+                            <select name="status" class="form-select form-select-sm">
+                                {% for status in ['Pending','Processing','Shipped','Delivered','Cancelled'] %}
+                                    <option value="{{ status }}" {% if order.status == status %}selected{% endif %}>{{ status }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-sm-auto">
+                            <button type="submit" class="btn btn-success btn-sm">Update Status</button>
+                        </div>
+                        <div class="col-12 mt-2 small text-muted">Total: ${{ '%.2f'|format(order.total) }}</div>
+                    </form>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

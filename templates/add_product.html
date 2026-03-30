@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}Add Product | AgriMarket{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-5">
+                <h1 class="h3 mb-4">Add a New Product</h1>
+                <form method="post" action="{{ url_for('add_product') }}" class="needs-validation" novalidate>
+                    <div class="mb-3">
+                        <label for="productName" class="form-label">Product Name</label>
+                        <input type="text" class="form-control" id="productName" name="name" required>
+                        <div class="invalid-feedback">Enter the product name.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="productDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="productDescription" name="description" rows="4" required></textarea>
+                        <div class="invalid-feedback">Enter a product description.</div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="productPrice" class="form-label">Price</label>
+                            <input type="number" step="0.01" class="form-control" id="productPrice" name="price" required>
+                            <div class="invalid-feedback">Enter a valid price.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="productCategory" class="form-label">Category</label>
+                            <input type="text" class="form-control" id="productCategory" name="category" required>
+                            <div class="invalid-feedback">Enter the product category.</div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="productImage" class="form-label">Image URL</label>
+                        <input type="url" class="form-control" id="productImage" name="image_url" required>
+                        <div class="invalid-feedback">Provide a valid image URL.</div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">Save Product</button>
+                        <a href="{{ url_for('products_page') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}{{ product.name }} | AgriMarket{% endblock %}
+{% block content %}
+<div class="row g-4 align-items-center">
+    <div class="col-md-6">
+        <img src="{{ product.image_url }}" class="img-fluid rounded shadow-sm" alt="{{ product.name }}">
+    </div>
+    <div class="col-md-6">
+        <h1 class="h2">{{ product.name }}</h1>
+        <p class="text-muted">Category: {{ product.category }}</p>
+        <p>{{ product.description }}</p>
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <span class="h3 text-success mb-0">${{ '%.2f'|format(product.price) }}</span>
+            <span class="badge bg-success">Farmer ID {{ product.farmer_id }}</span>
+        </div>
+        <div class="d-flex gap-2 align-items-center mb-4">
+            <label for="quantitySelect" class="form-label mb-0">Quantity:</label>
+            <input type="number" id="quantitySelect" class="form-control" value="1" min="1" style="width: 100px;">
+        </div>
+        <button id="addToCartBtn" class="btn btn-success btn-lg" data-product-id="{{ product.id }}">Add to Cart</button>
+        <a href="{{ url_for('products_page') }}" class="btn btn-outline-secondary btn-lg">Back to Products</a>
+    </div>
+</div>
+{% endblock %}

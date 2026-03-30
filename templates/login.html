@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}Login / Signup | AgriMarket{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-5">
+                <h1 class="h3 mb-4 text-center">Welcome Back</h1>
+                <ul class="nav nav-pills nav-justified mb-4" id="authTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="login-tab" data-bs-toggle="pill" data-bs-target="#login-pane" type="button" role="tab">Login</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="signup-tab" data-bs-toggle="pill" data-bs-target="#signup-pane" type="button" role="tab">Signup</button>
+                    </li>
+                </ul>
+                <div class="tab-content" id="authTabContent">
+                    <div class="tab-pane fade show active" id="login-pane" role="tabpanel" aria-labelledby="login-tab">
+                        <form method="post" action="{{ url_for('login') }}" class="needs-validation" novalidate>
+                            <div class="mb-3">
+                                <label for="loginEmail" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="loginEmail" name="email" required>
+                                <div class="invalid-feedback">Please enter a valid email.</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="loginPassword" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="loginPassword" name="password" required minlength="6">
+                                <div class="invalid-feedback">Password must be at least 6 characters.</div>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100">Login</button>
+                        </form>
+                    </div>
+                    <div class="tab-pane fade" id="signup-pane" role="tabpanel" aria-labelledby="signup-tab">
+                        <form method="post" action="{{ url_for('signup') }}" class="needs-validation" novalidate>
+                            <div class="mb-3">
+                                <label for="signupName" class="form-label">Name</label>
+                                <input type="text" class="form-control" id="signupName" name="name" required>
+                                <div class="invalid-feedback">Please enter your name.</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="signupEmail" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="signupEmail" name="email" required>
+                                <div class="invalid-feedback">Please enter a valid email.</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="signupPassword" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="signupPassword" name="password" required minlength="6">
+                                <div class="invalid-feedback">Create a password with at least 6 characters.</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="signupRole" class="form-label">Role</label>
+                                <select class="form-select" id="signupRole" name="role">
+                                    <option value="customer" selected>Customer</option>
+                                    <option value="farmer">Farmer</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100">Create Account</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
