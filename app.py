@@ -14,14 +14,26 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 
 # Configure application logging
 log_level = os.environ.get('LOG_LEVEL', 'INFO').upper()
-log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs')
-os.makedirs(log_dir, exist_ok=True)
-file_handler = RotatingFileHandler(os.path.join(log_dir, 'app.log'), maxBytes=1024 * 1024, backupCount=5, encoding='utf-8')
-file_handler.setLevel(getattr(logging, log_level, logging.INFO))
-file_formatter = logging.Formatter('%(asctime)s %(levelname)s %(name)s %(message)s')
-file_handler.setFormatter(file_formatter)
+log_formatter = logging.Formatter('%(asctime)s %(levelname)s %(name)s %(message)s')
 app.logger.setLevel(getattr(logging, log_level, logging.INFO))
-app.logger.addHandler(file_handler)
+
+# Always log to stdout (works on Render, Heroku, etc.)
+stream_handler = logging.StreamHandler()
+stream_handler.setLevel(getattr(logging, log_level, logging.INFO))
+stream_handler.setFormatter(log_formatter)
+app.logger.addHandler(stream_handler)
+
+# Also log to file locally if the logs directory is writable
+try:
+    log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs')
+    os.makedirs(log_dir, exist_ok=True)
+    file_handler = RotatingFileHandler(os.path.join(log_dir, 'app.log'), maxBytes=1024 * 1024, backupCount=5, encoding='utf-8')
+    file_handler.setLevel(getattr(logging, log_level, logging.INFO))
+    file_handler.setFormatter(log_formatter)
+    app.logger.addHandler(file_handler)
+except OSError:
+    pass  # Skip file logging on read-only filesystems (cloud environments)
+
 app.logger.info('Starting Farmers Market app with log level %s', log_level)
 
 db = SQLAlchemy(app)
